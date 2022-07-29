@@ -1,0 +1,97 @@
+name: Test Action
+
+on:
+  issues:
+    types: [labeled]    
+jobs:
+  test:
+    name: Test Action
+    if: contains(github.event.issue.labels.*.name, 'issueops')
+
+    runs-on: ubuntu-20.04
+    
+    steps:          
+    - id: parse
+      name: Run Issue form parser
+      uses: peter-murray/issue-forms-body-parser@v2.0.0
+      with:
+        issue_id: ${{ github.event.issue.number }}
+        separator: '###'
+        label_marker_start: '>>'
+        label_marker_end: '<<' 
+           
+    - id: issueinput
+      name: Parse Issue Input to get the type
+      uses: actions/github-script@v5
+      env:
+        payload: ${{ steps.parse.outputs.payload }}
+      with:
+        script: |
+          const {payload} = process.env
+          console.log(JSON.stringify(payload,null,2))
+          const input = JSON.parse(payload)
+          core.setOutput('issue_name', input.issue_name);
+
+    - name: Process the Request using Themis
+      id: themis
+      uses: decyjphr-actions/themis@HEAD
+      with:
+        issue_body_json: '${{ steps.parse.outputs.payload }}'
+        pat_token: ${{secrets.pat_token}}
+        issue_name: ${{ steps.issueinput.outputs.issue_name }}
+      
+    - name: Process Failure
+      if: ${{ failure() }}
+      uses: actions/github-script@v5
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          try { 
+            await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## :x: Sorry, your request could not be processed successfully
+            
+            Please see below for the errors:
+            ${{steps.themis.outputs.status}}`
+            }) 
+            
+            await github.rest.issues.setLabels({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: [
+            'issueops-error'
+            ]
+            })
+          } catch(err) {
+            throw err
+          }
+
+    - name: Process Success
+      uses: actions/github-script@v5
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          try { 
+            await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: ':white_check_mark: Congrats, your request has been processed\n${{steps.themis.outputs.status}}' 
+            }) 
+            
+            await github.rest.issues.setLabels({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            labels: [
+            'issueops-success'
+            ]
+            })
+          } catch(err) {
+            throw err
+          }
+          
+          

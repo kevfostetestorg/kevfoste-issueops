@@ -1,0 +1,45 @@
+name: Add Members to Teams
+description: Issue Forms template to invite members to an Org
+title: "Add Members to Teams"
+labels: ["issueops"]
+assignees:
+  - decyjphr
+body:
+- type: markdown
+  attributes:
+    value: "## Welcome!"
+- type: markdown
+  attributes:
+    value: |
+      Before adding members to the organization, please refer the
+      [Adding members Guidelines](https://github.com/monalisa/project/issues)
+      to see if your request will meet the requirements.
+- type: textarea
+  id: members
+  attributes:
+    label: ">>members<<"
+    description: |
+      Add the GitHub handle for persons; comma delimited list of persons.
+    placeholder: |
+      Example: 
+      user1, user2
+  validations:
+    required: true
+- type: textarea
+  id: teams
+  attributes:
+    label: ">>teams<<"
+    description: "Add the teams. comma delimited list of teams."
+    placeholder: |
+      TEAM1, TEAM2 
+  validations:
+    required: true
+- type: dropdown
+  id: issue_name
+  attributes:
+    label: ">>issue_name<<"
+    description: "This value is used in the action to create the correct type of input object. Needed till we find a better approach"
+    options:
+      - teaminputs
+  validations:
+    required: true
