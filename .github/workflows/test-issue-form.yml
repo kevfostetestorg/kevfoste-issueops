@@ -34,7 +34,7 @@ jobs:
 
     - name: Process the Request using Themis
       id: themis
-      uses: kevfostetstorg/themis@HEAD
+      uses: kevfostetestorg/themis@HEAD
       with:
         issue_body_json: '${{ steps.parse.outputs.payload }}'
         pat_token: ${{secrets.pat_token}}
